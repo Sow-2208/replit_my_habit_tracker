@@ -1,0 +1,73 @@
+Create a modern, clean, student-friendly Habit Tracker Website.
+
+Main Goal:
+The website should help me track my daily habits, visualize my progress, and stay motivated throughout the year — all in ONE dashboard/sheet.
+
+Core Requirements:
+
+1. Habit Section (Daily Tasks)
+- Allow me to create a list of daily habits (example: Wake up early, Study 2 hours, Exercise, Coding practice, Reading, No phone distraction, etc.)
+- Each habit should have a checkbox for every date.
+- When a checkbox is ticked, it should be saved automatically.
+- Habits should be editable (add, delete, rename).
+
+2. Calendar View (Yearly + Monthly)
+- Show all 12 months of the year.
+- Inside each month, display all dates clearly (1–31 depending on the month).
+- Each date should reflect completion status (color-coded: green = completed, yellow = partial, red = missed).
+- Clicking a date should show which habits were completed that day.
+
+3. Progress Graphs
+- A line or bar graph that shows:
+  - Daily habit completion percentage
+  - Weekly progress
+  - Monthly progress
+- Graph should update automatically when checkboxes are ticked.
+- Include a yearly consistency graph (streak-based).
+
+4. Flowchart / Progress Journey
+- Add a visual flowchart that represents my journey:
+  Start → Building Habits → Staying Consistent → Improving Skills → Achieving Goals
+- Flowchart should update visually based on progress (locked/unlocked stages).
+- Each stage should show motivational messages when reached.
+
+5. Motivation Section
+- A dedicated section where I can:
+  - Add my own motivational quotes
+  - Add short personal reasons (e.g., “I want a good career”, “I want to be disciplined”)
+- Show a random motivation message daily.
+- Display a motivational message when I complete all habits for the day.
+
+6. Streak & Consistency Tracker (Important)
+- Show:
+  - Current streak
+  - Longest streak
+- Highlight streak milestones (7 days, 30 days, 100 days).
+- Gentle reminder if a streak is about to break.
+
+7. All-in-One Dashboard
+- Everything should be visible in ONE scrollable page:
+  - Habits
+  - Calendar
+  - Graphs
+  - Flowchart
+  - Motivation
+- Clean UI, minimal colors, student productivity theme.
+- Mobile and desktop responsive design.
+
+8. Extra Features (Add these if possible)
+- Dark mode / Light mode
+- Export progress as PDF or CSV
+- Monthly reflection notes section
+- Simple login or local storage so data is not lost
+
+Tech Preferences (optional):
+- Use HTML, CSS, JavaScript (or React if advanced)
+- Use Chart.js or similar for graphs
+- Use LocalStorage or database to save progress
+
+Overall Feel:
+- Minimal
+- Motivational
+- Discipline-focused
+- Easy to use daily
