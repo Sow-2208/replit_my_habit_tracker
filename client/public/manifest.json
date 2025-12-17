@@ -1,0 +1,19 @@
+{
+  "name": "FocusFlow Habit Tracker",
+  "short_name": "FocusFlow",
+  "description": "Track your daily habits, visualize progress, and stay consistent.",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
