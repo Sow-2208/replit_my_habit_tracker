@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useHabitStore } from "@/lib/habit-store";
+import { useHabits, useAddHabit, useDeleteHabit, useToggleHabit } from "@/lib/habit-store";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
-import { Check, Plus, Trash2, Trophy, Flame } from "lucide-react";
+import { Check, Plus, Trash2, Flame, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,38 +10,61 @@ import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
 
 export function HabitTracker() {
-  const { habits, toggleHabit, addHabit, deleteHabit } = useHabitStore();
+  const { data: habits = [], isLoading } = useHabits();
+  const addHabit = useAddHabit();
+  const deleteHabit = useDeleteHabit();
+  const toggleHabit = useToggleHabit();
+  
   const [newHabitName, setNewHabitName] = useState("");
   const [isAdding, setIsAdding] = useState(false);
 
   const today = new Date();
-  const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday start
+  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   const handleToggle = (habitId: string, date: Date) => {
-    toggleHabit(habitId, date);
+    const dateStr = format(date, "yyyy-MM-dd");
+    const habit = habits.find(h => h.id === habitId);
+    const wasCompleted = habit?.completedDates.includes(dateStr);
     
-    // Check if all habits for today are completed for confetti
-    // This runs before the state update finishes, so we check if (completed + 1) == total
-    // But simplified: just trigger small confetti on every completion
-    if (!habits.find(h => h.id === habitId)?.completedDates.includes(format(date, 'yyyy-MM-dd'))) {
-       confetti({
-         particleCount: 30,
-         spread: 60,
-         origin: { y: 0.7 },
-         colors: ['#88B04B', '#92A8D1', '#F7CAC9']
-       });
+    toggleHabit.mutate({ habitId, date: dateStr });
+    
+    if (!wasCompleted) {
+      confetti({
+        particleCount: 30,
+        spread: 60,
+        origin: { y: 0.7 },
+        colors: ['#88B04B', '#92A8D1', '#F7CAC9']
+      });
     }
   };
 
   const handleAddHabit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newHabitName.trim()) {
-      addHabit(newHabitName, "other");
+      addHabit.mutate({ 
+        name: newHabitName, 
+        category: "other",
+        color: `hsl(${Math.random() * 360}, 70%, 50%)`
+      });
       setNewHabitName("");
       setIsAdding(false);
     }
   };
+
+  const handleDeleteHabit = (id: string) => {
+    deleteHabit.mutate(id);
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="w-full border-none shadow-sm bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full border-none shadow-sm bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
@@ -52,6 +75,7 @@ export function HabitTracker() {
           variant="outline" 
           className="h-8 gap-1 rounded-full text-xs font-medium border-primary/20 text-primary hover:bg-primary/10"
           onClick={() => setIsAdding(!isAdding)}
+          data-testid="button-add-habit"
         >
           <Plus className="h-3 w-3" /> New Habit
         </Button>
@@ -65,13 +89,13 @@ export function HabitTracker() {
               onChange={(e) => setNewHabitName(e.target.value)}
               className="h-9 text-sm"
               autoFocus
+              data-testid="input-habit-name"
             />
-            <Button type="submit" size="sm" className="h-9">Add</Button>
+            <Button type="submit" size="sm" className="h-9" data-testid="button-submit-habit">Add</Button>
           </form>
         )}
 
         <div className="space-y-4">
-          {/* Week Header - Hidden on mobile, shown on desktop */}
           <div className="hidden md:grid grid-cols-[2fr_repeat(7,1fr)_40px] gap-2 mb-2 text-xs font-medium text-muted-foreground text-center">
             <div className="text-left pl-2">Habit</div>
             {weekDays.map(day => (
@@ -86,7 +110,7 @@ export function HabitTracker() {
           </div>
 
           {habits.map(habit => (
-            <div key={habit.id} className="group relative bg-card hover:bg-white dark:hover:bg-slate-800 transition-colors rounded-xl border border-border/50 p-3 shadow-sm hover:shadow-md">
+            <div key={habit.id} className="group relative bg-card hover:bg-white dark:hover:bg-slate-800 transition-colors rounded-xl border border-border/50 p-3 shadow-sm hover:shadow-md" data-testid={`habit-row-${habit.id}`}>
               <div className="md:hidden flex justify-between items-center mb-3">
                 <span className="font-medium text-sm">{habit.name}</span>
                 <div className="flex gap-2">
@@ -100,7 +124,8 @@ export function HabitTracker() {
                     variant="ghost" 
                     size="icon" 
                     className="h-6 w-6 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => deleteHabit(habit.id)}
+                    onClick={() => handleDeleteHabit(habit.id)}
+                    data-testid={`button-delete-habit-${habit.id}`}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>
@@ -119,7 +144,8 @@ export function HabitTracker() {
                 </div>
 
                 {weekDays.map(day => {
-                  const isCompleted = habit.completedDates.includes(format(day, "yyyy-MM-dd"));
+                  const dateStr = format(day, "yyyy-MM-dd");
+                  const isCompleted = habit.completedDates.includes(dateStr);
                   const isToday = isSameDay(day, today);
                   return (
                     <div key={day.toString()} className="flex flex-col items-center justify-center">
@@ -133,6 +159,7 @@ export function HabitTracker() {
                             : "bg-muted/30 border-transparent hover:bg-muted text-transparent hover:border-border",
                           isToday && !isCompleted && "ring-2 ring-primary/20 border-primary/40"
                         )}
+                        data-testid={`checkbox-habit-${habit.id}-${dateStr}`}
                       >
                         <Check className={cn("h-4 w-4 stroke-[3]", isCompleted ? "opacity-100 scale-100" : "opacity-0 scale-50")} />
                       </button>
@@ -145,7 +172,8 @@ export function HabitTracker() {
                     variant="ghost" 
                     size="icon" 
                     className="h-8 w-8 text-muted-foreground/50 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => deleteHabit(habit.id)}
+                    onClick={() => handleDeleteHabit(habit.id)}
+                    data-testid={`button-delete-habit-desktop-${habit.id}`}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -155,7 +183,7 @@ export function HabitTracker() {
           ))}
 
           {habits.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
+            <div className="text-center py-12 text-muted-foreground" data-testid="empty-habits-message">
               <p className="mb-2">No habits tracked yet.</p>
               <Button variant="outline" onClick={() => setIsAdding(true)}>Create your first habit</Button>
             </div>

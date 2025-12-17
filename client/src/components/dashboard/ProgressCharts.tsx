@@ -1,14 +1,14 @@
-import { useHabitStore } from "@/lib/habit-store";
+import { useHabits } from "@/lib/habit-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { subDays, format } from "date-fns";
+import { Loader2 } from "lucide-react";
 
 export function ProgressCharts() {
-  const { habits } = useHabitStore();
+  const { data: habits = [], isLoading } = useHabits();
 
-  // Generate last 30 days data
   const data = Array.from({ length: 14 }).map((_, i) => {
-    const date = subDays(new Date(), 13 - i); // Last 14 days (2 weeks)
+    const date = subDays(new Date(), 13 - i);
     const dateStr = format(date, "yyyy-MM-dd");
     
     let completedCount = 0;
@@ -26,6 +26,16 @@ export function ProgressCharts() {
       completed: completedCount
     };
   });
+
+  if (isLoading) {
+    return (
+      <Card className="border-none shadow-sm bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-none shadow-sm bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">

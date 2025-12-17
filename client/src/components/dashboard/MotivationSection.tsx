@@ -1,23 +1,40 @@
-import { useHabitStore } from "@/lib/habit-store";
+import { useMotivations } from "@/lib/habit-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Quote, Sparkles } from "lucide-react";
+import { Quote, Sparkles, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 export function MotivationSection() {
-  const { motivations } = useHabitStore();
-  const [currentQuote, setCurrentQuote] = useState(motivations[0]);
+  const { data: motivations = [], isLoading } = useMotivations();
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Rotate quotes randomly on mount or click
   useEffect(() => {
-    const random = motivations[Math.floor(Math.random() * motivations.length)];
-    setCurrentQuote(random);
-  }, []);
+    if (motivations.length > 0) {
+      setCurrentIndex(Math.floor(Math.random() * motivations.length));
+    }
+  }, [motivations.length]);
 
   const nextQuote = () => {
-    const random = motivations[Math.floor(Math.random() * motivations.length)];
-    setCurrentQuote(random);
+    if (motivations.length > 0) {
+      setCurrentIndex(Math.floor(Math.random() * motivations.length));
+    }
   };
+
+  const currentQuote = motivations[currentIndex];
+
+  if (isLoading) {
+    return (
+      <Card className="bg-gradient-to-br from-accent/20 to-secondary/20 border-none shadow-sm">
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!currentQuote) {
+    return null;
+  }
 
   return (
     <Card className="bg-gradient-to-br from-accent/20 to-secondary/20 border-none shadow-sm relative overflow-hidden">
@@ -34,7 +51,7 @@ export function MotivationSection() {
       
       <CardContent className="pt-4">
         <div className="min-h-[100px] flex flex-col justify-center">
-          <p className="text-xl md:text-2xl font-hand leading-relaxed text-foreground/90">
+          <p className="text-xl md:text-2xl font-hand leading-relaxed text-foreground/90" data-testid="motivation-text">
             "{currentQuote.text}"
           </p>
           {currentQuote.author && (
@@ -50,6 +67,7 @@ export function MotivationSection() {
             size="sm" 
             className="text-xs text-muted-foreground hover:text-primary"
             onClick={nextQuote}
+            data-testid="button-new-quote"
           >
             New Quote
           </Button>

@@ -1,19 +1,18 @@
-import { useHabitStore } from "@/lib/habit-store";
-import { format, startOfYear, eachDayOfInterval, endOfYear, getDay, isSameDay, parseISO } from "date-fns";
+import { useHabits } from "@/lib/habit-store";
+import { format, startOfYear, eachDayOfInterval, endOfYear, getDay, isSameDay } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 export function CalendarView() {
-  const { habits } = useHabitStore();
+  const { data: habits = [], isLoading } = useHabits();
   const currentYear = new Date().getFullYear();
   const start = startOfYear(new Date());
   const end = endOfYear(new Date());
   
   const days = eachDayOfInterval({ start, end });
 
-  // Calculate daily completion rate
-  // Map: '2025-01-01' -> completion percentage (0-1)
   const activityMap = new Map<string, number>();
 
   days.forEach(day => {
@@ -33,19 +32,27 @@ export function CalendarView() {
     activityMap.set(dateStr, completedCount / habits.length);
   });
 
-  // Helper to get color based on intensity
   const getColor = (intensity: number) => {
-    if (intensity === 0) return "bg-muted/40"; // No activity
-    if (intensity <= 0.25) return "bg-primary/30"; // Low
-    if (intensity <= 0.5) return "bg-primary/50"; // Medium
-    if (intensity <= 0.75) return "bg-primary/75"; // High
-    return "bg-primary"; // Perfect
+    if (intensity === 0) return "bg-muted/40";
+    if (intensity <= 0.25) return "bg-primary/30";
+    if (intensity <= 0.5) return "bg-primary/50";
+    if (intensity <= 0.75) return "bg-primary/75";
+    return "bg-primary";
   };
 
-  // Group by months for display
   const months = Array.from({ length: 12 }, (_, i) => {
     return days.filter(d => d.getMonth() === i);
   });
+
+  if (isLoading) {
+    return (
+      <Card className="border-none shadow-sm bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-none shadow-sm bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm overflow-hidden">
@@ -61,7 +68,6 @@ export function CalendarView() {
                    {format(new Date(currentYear, monthIdx), "MMM")}
                  </span>
                  <div className="grid grid-rows-7 grid-flow-col gap-1">
-                   {/* Pad beginning of month to align with weekdays */}
                    {Array.from({ length: getDay(monthDays[0]) }).map((_, i) => (
                      <div key={`empty-${i}`} className="w-2.5 h-2.5" />
                    ))}
@@ -81,6 +87,7 @@ export function CalendarView() {
                                  getColor(intensity),
                                  isToday && "ring-1 ring-offset-1 ring-foreground"
                                )} 
+                               data-testid={`calendar-day-${dateStr}`}
                              />
                            </TooltipTrigger>
                            <TooltipContent className="text-xs">
